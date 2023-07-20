@@ -13,8 +13,7 @@ import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 load_dotenv()
-
-
+OPEN_AI_API_KEY = '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'
 DISCORD_API_KEY =os.getenv('DISCORD_API_KEY')
 WEATHER_API_KEY =os.getenv('WEATHER_API_KEY')
 command_prefix = '!'
@@ -96,6 +95,14 @@ async def on_message(message):
                     print(data)
                 except KeyError:
                     await message.channel.send(embed=error_message(location))
+        
+        if message.content.startswith('!gpt'):
+            command=message.content.split(' ')[0]
+            user_message=message.content.replace('!gpt', '')
+            print(command,user_message)
+        if command == '!gpt':
+            bot_response = chatgpt_response(prompt=user_message)
+            await message.channel.send(f"Answer:{bot_response}")
 
 
 client.loop.create_task(update_stats())
