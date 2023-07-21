@@ -7,15 +7,12 @@ import json
 import asyncio
 import time
 import asyncio
-from weather import *
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 
 load_dotenv()
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 DISCORD_API_KEY =os.getenv('DISCORD_API_KEY')
-WEATHER_API_KEY =os.getenv('WEATHER_API_KEY')
 command_prefix = '!'
 intents = discord.Intents.default()
 intents.message_content = True
