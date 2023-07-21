@@ -7,11 +7,11 @@ import json
 import asyncio
 import time
 import asyncio
-
 from weather import *
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
+
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 DISCORD_API_KEY =os.getenv('DISCORD_API_KEY')
@@ -20,12 +20,33 @@ command_prefix = '!'
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
+#http://127.0.0.1:8000/api/score/update
+#"https://salty-lake-34967-ee129c6a2f28.herokuapp.com/api/random"
+
+def get_score():
+    response = requests.get("http://127.0.0.1:8000/api/score/leaderboard")
+    leaderboard = ''
+    id = 1
+    json_data = json.loads(response.text)
+
+    for item in json_data:
+        leaderboard += str(id) + ' ' + item['name'] + ". " + str(item['points']) + "\n"
+        id += 1
+    return (leaderboard)
+
+def update_score(user, points):
+    url = 'http://127.0.0.1:8000/api/score/update/'
+    new_score = {'name':user,'points':points}
+    x = requests.post(url, data = new_score)
+
+    return 
 
 def get_question():
     qs = ''
     id = 1
     answer = 0
-    response = requests.get("https://salty-lake-34967-ee129c6a2f28.herokuapp.com/api/random")
+    points = 0
+    response = requests.get("http://127.0.0.1:8000/api/random")
     json_data = json.loads(response.text)
     qs += "Question: \n"
     qs += json_data[0]['title'] + '\n'
@@ -37,14 +58,19 @@ def get_question():
             answer = id
         
         id += 1
-    return(qs, answer)
+    points = json_data[0]['points']
+    return(qs, answer, points)
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
+    if message.content.startswith('!s'):
+        leaderboard = get_score()
+        await message.channel.send(leaderboard)
+
     if message.content.startswith('!q'):
-        q, ans = get_question()
+        q, ans,points = get_question()
         await message.channel.send(q)
     
         def check(m):
@@ -56,7 +82,11 @@ async def on_message(message):
             return await message.channel.send('Sorry, you did not answer quick enough')
         
         if int(guess.content) == ans:
-            await message.channel.send('Correct!')
+            
+            user = guess.author
+            msg = str(guess.author.name) + 'Correct! +' + str(points) + 'points'
+            await message.channel.send(msg)
+            update_score(user, points)
         else:
             await message.channel.send('Sorry thats incorrect')
 
